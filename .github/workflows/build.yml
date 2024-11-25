@@ -36,10 +36,8 @@ jobs:
               openconnect \
               rpm \
               libx11-dev \
-              libfuse2
-
-      - name: get-cmake
-        uses: lukka/get-cmake@latest
+              libfuse2 \
+              cmake
 
       - name: build
         run: |
