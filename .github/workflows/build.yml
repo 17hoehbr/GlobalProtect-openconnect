@@ -42,7 +42,7 @@ jobs:
       - name: build
         run: |
           mkdir build
-          MAKEFLAGS=-j$(nproc) cmake --build build
+          make --build build
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4.4.3
