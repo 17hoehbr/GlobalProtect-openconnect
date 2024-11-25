@@ -41,6 +41,7 @@ jobs:
 
       - name: build
         run: |
+          mkdir build
           MAKEFLAGS=-j$(nproc) cmake --build build
 
       - name: Upload Build Artifacts
