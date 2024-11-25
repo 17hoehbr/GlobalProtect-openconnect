@@ -12,8 +12,7 @@ on:
       - "*.md"
       - .vscode
   workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+  
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,6 +23,15 @@ jobs:
         with:
           submodules: recursive
 
+      # Cache dependencies
+      - name: Cache APT packages
+        uses: actions/cache@v3
+        with:
+          path: /var/cache/apt
+          key: ${{ runner.os }}-apt-${{ hashFiles('apt-packages.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
+            
       - name: Install Dependencies
         run: |
           sudo apt-get update
@@ -34,8 +42,18 @@ jobs:
               qtwebengine5-dev \
               qttools5-dev \
               qt5keychain-dev \
-              openconnect
-              
+              openconnect \
+              rpm \
+              libx11-dev \
+              libfuse2
+        env:
+          DEBIAN_FRONTEND: noninteractive
+
+
+      # Generate a list of installed APT packages for caching
+      - name: Save APT package list
+        run: dpkg-query -W -f='${binary:Package}\n' > apt-packages.txt
+
       - name: Build
         run: |
           ./cmakew -B build \
@@ -43,17 +61,38 @@ jobs:
               -DCMAKE_CXX_FLAGS_RELEASE=-s
           
           MAKEFLAGS=-j$(nproc) ./cmakew --build build
-          ls
 
-      - name: Package
+      - name: Package DEB
         run: |
-          cpack -G DEB gpclient
+          cpack -G DEB
+
+      - name: Package RPM
+        run: |
+          cpack -G RPM
+
+      - name: Package AppImage
+        run: |
+          ./cmakew -B build \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_CXX_FLAGS_RELEASE=-s
           
-      - name: Upload a Build Artifact
+          MAKEFLAGS=-j$(nproc) ./cmakew --build build
+
+          # AppImage generation
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage
+          ./linuxdeploy-x86_64.AppImage \
+              --appdir AppDir \
+              --output appimage
+
+      - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4.4.3
         with:
-          name: deb
-          path: ./*.deb
+          name: packages
+          path: |
+            ./*.deb
+            ./*.rpm
+            ./*.AppImage
 
   release-github:
     needs: build
@@ -61,9 +100,10 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4.1.8
         with:
-          name: release-source-code
+          name: packages
           path: artifacts
       - uses: ncipollo/release-action@v1.14.0
         with:
-          artifacts: "./artifacts/*.tar.gz"
+          artifacts: "./artifacts/*.{deb,rpm,AppImage}"
           tag: "v1.4.9"
+
