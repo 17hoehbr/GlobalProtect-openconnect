@@ -24,67 +24,36 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+              build-essential \
+              qtbase5-dev \
+              libqt5websockets5-dev \
+              qtwebengine5-dev \
+              qttools5-dev \
+              qt5keychain-dev \
+              openconnect
+              
       - name: Build
         run: |
-          ./scripts/install-ubuntu.sh
-          # assert no library missing
-          test $(ldd $(which gpclient) | grep 'not found' | wc -l) -eq 0
+          ./cmakew -B build \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_CXX_FLAGS_RELEASE=-s
+          
+          MAKEFLAGS=-j$(nproc) ./cmakew --build build
 
-  snapshot-archive-all:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4.2.2
+      - name: Package
+        run: |
+          cpack -G DEB
+          ls
+          
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4.4.3
         with:
-          submodules: recursive
-          fetch-depth: 0
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install git-archive-all
-
-      - name: Archive all
-        run: |
-          ./scripts/snapshot-archive-all.sh
-
-      - name: Verify debian package
-        run: |
-          ./scripts/verify-debian-package.sh
-
-      - uses: actions/upload-artifact@v4.4.3
-        with:
-          name: snapshot-source-code
-          path: ./artifacts/*
-
-  release-archive-all:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4.2.2
-        with:
-          submodules: recursive
-          fetch-depth: 0
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install git-archive-all
-
-      - name: Archive all
-        run: |
-          ./scripts/release-archive-all.sh
-
-      - name: Verify debian package
-        run: |
-          ./scripts/verify-debian-package.sh
-
-      - uses: actions/upload-artifact@v4.4.3
-        with:
-          name: release-source-code
-          path: ./artifacts/*
+          name: deb
+          path: ./*.deb
 
   release-github:
     runs-on: ubuntu-latest
