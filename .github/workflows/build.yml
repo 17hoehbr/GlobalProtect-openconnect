@@ -62,23 +62,13 @@ jobs:
           
           MAKEFLAGS=-j$(nproc) ./cmakew --build build
 
-      - name: Package DEB
+      - name: Package DEB and RPM
         run: |
-          cpack -G DEB
-
-      - name: Package RPM
-        run: |
-          cpack -G RPM
+          cd build
+          cpack
 
       - name: Package AppImage
         run: |
-          ./cmakew -B build \
-              -DCMAKE_BUILD_TYPE=Release \
-              -DCMAKE_CXX_FLAGS_RELEASE=-s
-          
-          MAKEFLAGS=-j$(nproc) ./cmakew --build build
-
-          # AppImage generation
           wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
           chmod +x linuxdeploy-x86_64.AppImage
           ./linuxdeploy-x86_64.AppImage \
