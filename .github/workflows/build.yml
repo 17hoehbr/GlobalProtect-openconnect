@@ -43,11 +43,11 @@ jobs:
               -DCMAKE_CXX_FLAGS_RELEASE=-s
           
           MAKEFLAGS=-j$(nproc) ./cmakew --build build
+          ls
 
       - name: Package
         run: |
-          cpack -G DEB
-          ls
+          cpack -G DEB gpclient
           
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4.4.3
@@ -56,6 +56,7 @@ jobs:
           path: ./*.deb
 
   release-github:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4.1.8
