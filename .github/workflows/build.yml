@@ -53,9 +53,7 @@ jobs:
         with:
           name: packages
           path: |
-            ./build/*.deb
-            ./build/*.rpm
-            ./build/*.AppImage
+            ./build
 
       # - name: Github release
       #   uses: ncipollo/release-action@v1.14.0
