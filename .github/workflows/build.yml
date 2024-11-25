@@ -63,6 +63,6 @@ jobs:
       - name: Github release
         uses: ncipollo/release-action@v1.14.0
         with:
-          artifacts: "./*.deb, ./*.rpm"
+          artifacts: "./artifacts/*.{deb,rpm,AppImage}"
           tag: "v1.4.9"
 
