@@ -45,7 +45,6 @@ jobs:
               -DCMAKE_CXX_FLAGS_RELEASE=-s
           
           MAKEFLAGS=-j$(nproc) ./cmakew --build build
-          ls
           ls build/
 
 
