@@ -42,7 +42,7 @@ jobs:
       - name: build
         run: |
           mkdir build
-          make --build build
+          make .
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4.4.3
